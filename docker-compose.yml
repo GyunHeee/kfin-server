@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kfin-server
+    ports:
+      - "${SPRING_PORT}:8080"
+    env_file:
+      - ${ENV_FILE:-.env.local}
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      - kfin-database
+    restart: always
+    networks:
+      - kfin-net
+
+  # 로컬에서만 MySQL 컨테이너 구동
+  kfin-database:
+    image: mysql:8.4.4
+    container_name: kfin-database
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:3309"
+    volumes:
+      - kfin-data:/var/lib/mysql
+    restart: always
+    networks:
+      - kfin-net
+    profiles: ["local"]
+
+volumes:
+  kfin-data:
+
+networks:
+  kfin-net:
+    driver: bridge
